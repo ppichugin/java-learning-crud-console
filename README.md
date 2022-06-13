@@ -21,3 +21,9 @@ PostStatus (enum ACTIVE, UNDER_REVIEW, DELETED)
 Java, MySQL, JDBC, Maven, Liquibase, JUnit, Mockito
 
 ### Инструкции для запуска:
+* Клонировать репозиторий локально
+* Установить Docker (если не установлен), запустить контейнер MySQL:
+``
+docker run --name mysqlsrv -p 3306:3306 -e MYSQL_ALLOW_EMPTY_PASSWORD=yes -e MYSQL_ROOT_PASSWORD=password -e MYSQL_DATABASE=carddb -e MYSQL_USER=card -e MYSQL_PASSWORD=password -d mysql:latest
+``
+* 

@@ -1,4 +1,4 @@
-package model;
+package kz.pichugin.model;
 
 public enum PostStatus {
     ACTIVE("Опубликован"),
