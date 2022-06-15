@@ -1,25 +1,31 @@
-CREATE TABLE Labels
+CREATE TABLE labels
 (
-    ID     BIGINT AUTO_INCREMENT PRIMARY KEY,
-    Name   VARCHAR(255) NOT NULL,
-    PostId BIGINT
-);
+    id      SERIAL PRIMARY KEY,
+    name    VARCHAR(255) NOT NULL,
+    post_id BIGINT UNSIGNED
+)
+    ENGINE = InnoDB;
 
-CREATE TABLE Posts
+CREATE TABLE posts
 (
-    ID         BIGINT AUTO_INCREMENT,
-    Content    VARCHAR(255) NOT NULL,
-    Created    DATE         NOT NULL,
-    Updated    DATE         NOT NULL,
-    PostStatus varchar(255) not null,
-    WriterId   BIGINT,
-    PRIMARY KEY (ID)
-);
+    id          SERIAL PRIMARY KEY,
+    content     VARCHAR(255) NOT NULL,
+    created     DATE         NOT NULL,
+    updated     DATE         NOT NULL,
+    post_status VARCHAR(255) NOT NULL,
+    writer_id   BIGINT UNSIGNED
+)
+    ENGINE = InnoDB;
 
-CREATE TABLE Writers
+CREATE TABLE writers
 (
-    ID        BIGINT       NOT NULL AUTO_INCREMENT,
-    FirstName VARCHAR(255) NOT NULL,
-    LastName  varchar(255) NOT NULL,
-    PRIMARY KEY (ID)
-);
+    id         SERIAL PRIMARY KEY,
+    first_name VARCHAR(255) NOT NULL,
+    last_name  VARCHAR(255) NOT NULL
+)
+    ENGINE = InnoDB;
+
+ALTER TABLE labels
+    ADD CONSTRAINT post_id_fk FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE;
+ALTER TABLE posts
+    ADD CONSTRAINT writer_id_fk FOREIGN KEY (writer_id) REFERENCES writers (id) ON DELETE CASCADE;
