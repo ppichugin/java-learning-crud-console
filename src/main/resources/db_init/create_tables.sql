@@ -25,6 +25,16 @@ CREATE TABLE writers
 )
     ENGINE = InnoDB;
 
+# CREATE TABLE post_labels
+# (
+#     id        SERIAL PRIMARY KEY,
+#     post_id   BIGINT UNSIGNED,
+#     labels_id BIGINT UNSIGNED,
+#     FOREIGN KEY (post_id) REFERENCES posts (id),
+#     FOREIGN KEY (labels_id) REFERENCES labels (id)
+# )
+#     ENGINE = InnoDB;
+
 ALTER TABLE labels
     ADD CONSTRAINT post_id_fk FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE;
 ALTER TABLE posts

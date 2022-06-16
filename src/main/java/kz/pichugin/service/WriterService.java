@@ -17,16 +17,13 @@ public class WriterService {
         return repository.save(type);
     }
 
-
     public Writer update(Writer type) {
         return repository.update(type);
     }
 
-
     public Writer getById(Long aLong) {
         return repository.getById(aLong);
     }
-
 
     public void deleteById(Long aLong) {
         repository.deleteById(aLong);

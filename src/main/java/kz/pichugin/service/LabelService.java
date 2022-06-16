@@ -17,16 +17,13 @@ public class LabelService {
         return repository.save(type);
     }
 
-
     public Label update(Label type) {
         return repository.update(type);
     }
 
-
     public Label getById(Long aLong) {
         return repository.getById(aLong);
     }
-
 
     public void deleteById(Long aLong) {
         repository.deleteById(aLong);

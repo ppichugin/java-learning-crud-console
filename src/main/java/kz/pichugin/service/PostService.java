@@ -32,5 +32,4 @@ public class PostService {
     public List<Post> getAll() {
         return repository.getAll();
     }
-
 }

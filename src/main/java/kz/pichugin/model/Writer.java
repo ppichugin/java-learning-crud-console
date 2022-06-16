@@ -1,7 +1,7 @@
 package kz.pichugin.model;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Writer {
     private final Long id;
@@ -9,7 +9,13 @@ public class Writer {
     private final String lastName;
     private List<Post> posts;
 
+    public Writer(String firstName, String lastName) {
+        this(null, firstName, lastName, null);
+    }
+
     public Writer(Long id, String firstName, String lastName, List<Post> posts) {
+        Objects.requireNonNull(firstName, "first name can not be empty");
+        Objects.requireNonNull(lastName, "last name can not be empty");
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -34,5 +40,9 @@ public class Writer {
 
     public void setPosts(List<Post> posts) {
         this.posts = posts;
+    }
+
+    public boolean isNew() {
+        return getId() == null;
     }
 }

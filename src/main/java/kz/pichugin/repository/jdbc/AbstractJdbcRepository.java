@@ -6,6 +6,6 @@ import kz.pichugin.sql.SqlHelper;
 import java.sql.Connection;
 
 public abstract class AbstractJdbcRepository {
-    protected Connection connection = ConnectionMySql.get().getSqlConnection();
+    protected final Connection connection = ConnectionMySql.get().getSqlConnection();
     protected SqlHelper sqlHelper;
 }
