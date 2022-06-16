@@ -81,4 +81,18 @@ public class Post {
     public boolean isNew() {
         return getId() == null;
     }
+
+    @Override
+    public String toString() {
+        final StringBuffer sb = new StringBuffer("Post{");
+        sb.append("id=").append(id);
+        sb.append(", content='").append(content).append('\'');
+        sb.append(", created=").append(created);
+        sb.append(", updated=").append(updated);
+        sb.append(", labels=").append(labels);
+        sb.append(", postStatus=").append(postStatus);
+        sb.append(", writer=").append(writer);
+        sb.append('}');
+        return sb.toString();
+    }
 }

@@ -26,4 +26,14 @@ public class Label {
     public void setPostId(Long postId) {
         this.postId = postId;
     }
+
+    @Override
+    public String toString() {
+        final StringBuffer sb = new StringBuffer("Label{");
+        sb.append("id=").append(id);
+        sb.append(", name='").append(name).append('\'');
+        sb.append(", postId=").append(postId);
+        sb.append('}');
+        return sb.toString();
+    }
 }

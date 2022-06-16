@@ -45,4 +45,15 @@ public class Writer {
     public boolean isNew() {
         return getId() == null;
     }
+
+    @Override
+    public String toString() {
+        final StringBuffer sb = new StringBuffer("Writer{");
+        sb.append("id=").append(id);
+        sb.append(", firstName='").append(firstName).append('\'');
+        sb.append(", lastName='").append(lastName).append('\'');
+        sb.append(", posts=").append(posts);
+        sb.append('}');
+        return sb.toString();
+    }
 }
