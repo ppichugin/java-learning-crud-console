@@ -1,25 +1,25 @@
 package kz.pichugin.sql;
 
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
 public class ConnectionMySql {
-    private static final String PROPS = "src/main/resources/jdbc.properties";
+    private static final String PROPS = "C:\\MyJava\\java-learning-crud\\src\\main\\resources\\jdbc.properties";
     private static final ConnectionMySql INSTANCE = new ConnectionMySql();
     private final Connection sqlConnection;
 
     private ConnectionMySql() {
-        try (InputStream is = ConnectionMySql.class.getResourceAsStream(PROPS)) {
+        try (FileInputStream is = new FileInputStream(PROPS)) {
             Properties props = new Properties();
             props.load(is);
-            String dbDriver = props.getProperty("driver");
-            String dbUrl = props.getProperty("url");
-            String dbUsername = props.getProperty("username");
-            String dbPassword = props.getProperty("password");
+            final String dbDriver = props.getProperty("driver");
+            final String dbUrl = props.getProperty("url");
+            final String dbUsername = props.getProperty("username");
+            final String dbPassword = props.getProperty("password");
 
             Class.forName(dbDriver);
             sqlConnection = DriverManager.getConnection(dbUrl, dbUsername, dbPassword);

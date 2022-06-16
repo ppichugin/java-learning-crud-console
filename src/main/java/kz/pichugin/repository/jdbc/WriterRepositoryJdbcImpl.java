@@ -1,12 +1,16 @@
 package kz.pichugin.repository.jdbc;
 
 import kz.pichugin.model.Post;
+import kz.pichugin.model.PostStatus;
 import kz.pichugin.model.Writer;
 import kz.pichugin.repository.WriterRepository;
 import kz.pichugin.sql.SqlHelper;
+import kz.pichugin.util.ToLocalDateTimeConverter;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -82,17 +86,50 @@ public class WriterRepositoryJdbcImpl extends AbstractJdbcRepository implements 
 
     @Override
     public List<Writer> getAll() {
-        return sqlHelper.execute("SELECT * FROM writers", ps -> {
+        /*
+         * alternative SQL query
+         *
+         * SELECT * FROM writers
+         * LEFT JOIN posts p ON writers.id = p.writer_id
+         * LEFT JOIN labels l ON p.id = l.post_id;
+         */
+        return sqlHelper.transactionalExecute(conn -> {
             List<Writer> writers = new ArrayList<>();
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                Writer writer = getWriter(rs.getLong("id"), rs);
-                writers.add(writer);
+            try (PreparedStatement ps = conn
+                    .prepareStatement("SELECT * FROM writers")) {
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    long writerId = rs.getLong("id");
+                    String first_name = rs.getString("first_name");
+                    String last_name = rs.getString("last_name");
+                    Writer writer = new Writer(writerId, first_name, last_name, null);
+
+                    List<Post> posts = sqlHelper.transactionalExecute(connPosts -> {
+                        List<Post> postList = new ArrayList<>();
+                        try (PreparedStatement psPosts = connPosts
+                                .prepareStatement("SELECT * FROM posts WHERE writer_id=?")) {
+                            psPosts.setLong(1, writerId);
+                            ResultSet rsPosts = psPosts.executeQuery();
+                            while (rsPosts.next()) {
+                                long postId = rsPosts.getLong("id");
+                                String content = rsPosts.getString("content");
+                                LocalDateTime created = ToLocalDateTimeConverter.convert(rsPosts.getTimestamp("created"));
+                                LocalDateTime updated = ToLocalDateTimeConverter.convert(rsPosts.getTimestamp("updated"));
+                                PostStatus postStatus = PostStatus.valueOf(rsPosts.getString("post_status"));
+                                postList.add(new Post(postId, content, created, updated, postStatus, null, writer));
+                            }
+                        }
+                        return postList;
+                    });
+                    writer.setPosts(posts);
+                    writers.add(writer);
+                }
             }
             return writers;
         });
     }
 
+    //todo re-check
     private Writer getWriter(Long writerId, ResultSet rs) throws SQLException {
         String first_name = rs.getString("first_name");
         String last_name = rs.getString("last_name");

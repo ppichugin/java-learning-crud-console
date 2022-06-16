@@ -13,8 +13,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <profile.changeLogFile>src/main/resources/changelog.xml</profile.changeLogFile>
         <profile.propertyFile>src/main/resources/liquibase.properties</profile.propertyFile>
     </properties>
