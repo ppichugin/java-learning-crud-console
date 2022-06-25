@@ -2,7 +2,7 @@ package kz.pichugin.repository.jdbc;
 
 import kz.pichugin.model.Label;
 import kz.pichugin.repository.LabelRepository;
-import kz.pichugin.sql.SqlHelper;
+import kz.pichugin.sql.JdbcOperator;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -10,22 +10,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LabelRepositoryJdbcImpl extends AbstractJdbcRepository implements LabelRepository {
-    private static LabelRepositoryJdbcImpl instance;
-
-    private LabelRepositoryJdbcImpl() {
-        sqlHelper = new SqlHelper(() -> connection);
-    }
-
-    public static LabelRepositoryJdbcImpl getInstance() {
-        if (instance == null) {
-            instance = new LabelRepositoryJdbcImpl();
-        }
-        return instance;
-    }
+//    private static LabelRepositoryJdbcImpl instance;
+//
+//    private LabelRepositoryJdbcImpl() {
+//        jdbcOperator = new JdbcOperator(() -> connection);
+//    }
+//
+//    public static LabelRepositoryJdbcImpl getInstance() {
+//        if (instance == null) {
+//            instance = new LabelRepositoryJdbcImpl();
+//        }
+//        return instance;
+//    }
 
     @Override
     public Label save(Label label) {
-        sqlHelper.transactionalExecute(conn -> {
+        JdbcOperator.transactionalExecute(conn -> {
             try (PreparedStatement ps = conn.prepareStatement("INSERT INTO labels (name, post_id) VALUES (?,?)")) {
                 ps.setString(1, label.getName());
                 ps.setLong(2, label.getPostId());
@@ -38,7 +38,7 @@ public class LabelRepositoryJdbcImpl extends AbstractJdbcRepository implements L
 
     @Override
     public Label update(Label label) {
-        sqlHelper.execute("UPDATE labels SET name = ? WHERE id = ?", ps -> {
+        JdbcOperator.execute("UPDATE labels SET name = ? WHERE id = ?", ps -> {
             ps.setString(1, label.getName());
             ps.setLong(2, label.getId());
             ps.executeUpdate();
@@ -50,7 +50,7 @@ public class LabelRepositoryJdbcImpl extends AbstractJdbcRepository implements L
     @Override
     public Label getById(Long aLong) {
         final Label[] label = {null};
-        sqlHelper.transactionalExecute(conn -> {
+        JdbcOperator.transactionalExecute(conn -> {
             try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM labels WHERE id = ?")) {
                 ps.setLong(1, aLong);
                 ResultSet rs = ps.executeQuery();
@@ -66,7 +66,7 @@ public class LabelRepositoryJdbcImpl extends AbstractJdbcRepository implements L
 
     @Override
     public void deleteById(Long aLong) {
-        sqlHelper.execute("DELETE FROM labels WHERE id = ?", ps -> {
+        JdbcOperator.execute("DELETE FROM labels WHERE id = ?", ps -> {
             ps.setLong(1, aLong);
             ps.executeQuery();
             return null;
@@ -75,7 +75,7 @@ public class LabelRepositoryJdbcImpl extends AbstractJdbcRepository implements L
 
     @Override
     public List<Label> getAll() {
-        return sqlHelper.execute("SELECT * FROM labels", ps -> {
+        return JdbcOperator.execute("SELECT * FROM labels", ps -> {
             ResultSet rs = ps.executeQuery();
             List<Label> labels = new ArrayList<>();
             while (rs.next()) {
@@ -89,7 +89,7 @@ public class LabelRepositoryJdbcImpl extends AbstractJdbcRepository implements L
     }
 
     public List<Label> getLabelsByPostId(Long postId) {
-        return sqlHelper.execute("SELECT * FROM labels WHERE post_id=?", ps -> {
+        return JdbcOperator.execute("SELECT * FROM labels WHERE post_id=?", ps -> {
             ps.setLong(1, postId);
             ResultSet rs = ps.executeQuery();
             List<Label> labels = new ArrayList<>();

@@ -4,7 +4,7 @@ import kz.pichugin.model.Post;
 import kz.pichugin.model.PostStatus;
 import kz.pichugin.model.Writer;
 import kz.pichugin.repository.WriterRepository;
-import kz.pichugin.sql.SqlHelper;
+import kz.pichugin.sql.JdbcOperator;
 import kz.pichugin.util.ToLocalDateTimeConverter;
 
 import java.sql.PreparedStatement;
@@ -15,18 +15,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class WriterRepositoryJdbcImpl extends AbstractJdbcRepository implements WriterRepository {
-    private static WriterRepositoryJdbcImpl instance;
+//    private WriterRepositoryJdbcImpl instance;
 
-    private WriterRepositoryJdbcImpl() {
-        sqlHelper = new SqlHelper(() -> connection);
-    }
+//    public WriterRepositoryJdbcImpl() {
+//        jdbcOperator = new JdbcOperator(() -> ConnectionMySql.get().getSqlConnection());
+//    }
 
-    public static WriterRepositoryJdbcImpl getInstance() {
-        if (instance == null) {
-            instance = new WriterRepositoryJdbcImpl();
-        }
-        return instance;
-    }
+//    public static WriterRepositoryJdbcImpl getInstance() {
+//        if (instance == null) {
+//            jdbcOperator = new JdbcOperator(() -> connection);
+//            instance = new WriterRepositoryJdbcImpl();
+//        }
+//        return instance;
+//    }
 
     @Override
     public Writer save(Writer writer) {
@@ -34,7 +35,7 @@ public class WriterRepositoryJdbcImpl extends AbstractJdbcRepository implements 
             return null;
         }
         if (writer.isNew()) {
-            sqlHelper.execute("INSERT INTO writers (first_name, last_name) VALUE (?,?)", ps -> {
+            JdbcOperator.execute("INSERT INTO writers (first_name, last_name) VALUE (?,?)", ps -> {
                 ps.setString(1, writer.getFirstName());
                 ps.setString(2, writer.getLastName());
                 ps.executeUpdate();
@@ -55,7 +56,7 @@ public class WriterRepositoryJdbcImpl extends AbstractJdbcRepository implements 
             System.out.println("Writer is new, can not be updated.");
             return null;
         } else {
-            sqlHelper.execute("UPDATE writers SET first_name=?, last_name=? WHERE id=?", ps -> {
+            JdbcOperator.execute("UPDATE writers SET first_name=?, last_name=? WHERE id=?", ps -> {
                 ps.setString(1, writer.getFirstName());
                 ps.setString(2, writer.getLastName());
                 ps.setLong(3, writer.getId());
@@ -68,7 +69,7 @@ public class WriterRepositoryJdbcImpl extends AbstractJdbcRepository implements 
 
     @Override
     public Writer getById(Long id) {
-        return sqlHelper.execute("SELECT * FROM writers WHERE id=?", ps -> {
+        return JdbcOperator.execute("SELECT * FROM writers WHERE id=?", ps -> {
             ps.setLong(1, id);
             ResultSet rs = ps.executeQuery();
             return getWriter(id, rs);
@@ -77,7 +78,7 @@ public class WriterRepositoryJdbcImpl extends AbstractJdbcRepository implements 
 
     @Override
     public void deleteById(Long id) {
-        sqlHelper.execute("DELETE FROM writers WHERE id=?", ps -> {
+        JdbcOperator.execute("DELETE FROM writers WHERE id=?", ps -> {
             ps.setLong(1, id);
             ps.executeUpdate();
             return null;
@@ -86,6 +87,9 @@ public class WriterRepositoryJdbcImpl extends AbstractJdbcRepository implements 
 
     @Override
     public List<Writer> getAll() {
+
+        //TODO change SQL query to alternative to optimize performance
+
         /*
          * alternative SQL query
          *
@@ -93,35 +97,29 @@ public class WriterRepositoryJdbcImpl extends AbstractJdbcRepository implements 
          * LEFT JOIN posts p ON writers.id = p.writer_id
          * LEFT JOIN labels l ON p.id = l.post_id;
          */
-        return sqlHelper.transactionalExecute(conn -> {
+        return JdbcOperator.transactionalExecute(conn -> {
             List<Writer> writers = new ArrayList<>();
-            try (PreparedStatement ps = conn
-                    .prepareStatement("SELECT * FROM writers")) {
+            try (PreparedStatement ps = conn.prepareStatement("SELECT * FROM writers")) {
                 ResultSet rs = ps.executeQuery();
                 while (rs.next()) {
                     long writerId = rs.getLong("id");
                     String first_name = rs.getString("first_name");
                     String last_name = rs.getString("last_name");
                     Writer writer = new Writer(writerId, first_name, last_name, null);
-
-                    List<Post> posts = sqlHelper.transactionalExecute(connPosts -> {
-                        List<Post> postList = new ArrayList<>();
-                        try (PreparedStatement psPosts = connPosts
-                                .prepareStatement("SELECT * FROM posts WHERE writer_id=?")) {
-                            psPosts.setLong(1, writerId);
-                            ResultSet rsPosts = psPosts.executeQuery();
-                            while (rsPosts.next()) {
-                                long postId = rsPosts.getLong("id");
-                                String content = rsPosts.getString("content");
-                                LocalDateTime created = ToLocalDateTimeConverter.convert(rsPosts.getTimestamp("created"));
-                                LocalDateTime updated = ToLocalDateTimeConverter.convert(rsPosts.getTimestamp("updated"));
-                                PostStatus postStatus = PostStatus.valueOf(rsPosts.getString("post_status"));
-                                postList.add(new Post(postId, content, created, updated, postStatus, null, writer));
-                            }
+                    List<Post> postList = new ArrayList<>();
+                    try (PreparedStatement psPosts = conn.prepareStatement("SELECT * FROM posts WHERE writer_id=?")) {
+                        psPosts.setLong(1, writerId);
+                        ResultSet rsPosts = psPosts.executeQuery();
+                        while (rsPosts.next()) {
+                            long postId = rsPosts.getLong("id");
+                            String content = rsPosts.getString("content");
+                            LocalDateTime created = ToLocalDateTimeConverter.convert(rsPosts.getTimestamp("created"));
+                            LocalDateTime updated = ToLocalDateTimeConverter.convert(rsPosts.getTimestamp("updated"));
+                            PostStatus postStatus = PostStatus.valueOf(rsPosts.getString("post_status"));
+                            postList.add(new Post(postId, content, created, updated, postStatus, null, writer));
                         }
-                        return postList;
-                    });
-                    writer.setPosts(posts);
+                    }
+                    writer.setPosts(postList);
                     writers.add(writer);
                 }
             }
@@ -133,7 +131,7 @@ public class WriterRepositoryJdbcImpl extends AbstractJdbcRepository implements 
     private Writer getWriter(Long writerId, ResultSet rs) throws SQLException {
         String first_name = rs.getString("first_name");
         String last_name = rs.getString("last_name");
-        List<Post> posts = PostRepositoryJdbcImpl.getInstance().getPostsByWriterId(writerId);
-        return new Writer(writerId, first_name, last_name, posts);
+//        List<Post> posts = PostRepositoryJdbcImpl.getPostsByWriterId(writerId);
+        return new Writer(writerId, first_name, last_name, null);
     }
 }

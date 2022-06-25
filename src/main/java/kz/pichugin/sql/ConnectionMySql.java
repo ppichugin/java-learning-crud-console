@@ -8,8 +8,7 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 public class ConnectionMySql {
-    private static final String PROPS = "C:\\MyJava\\java-learning-crud\\src\\main\\resources\\jdbc.properties";
-    private static final ConnectionMySql INSTANCE = new ConnectionMySql();
+    private static final String PROPS = "src/main/resources/jdbc.properties";
     private final Connection sqlConnection;
 
     private ConnectionMySql() {
@@ -30,11 +29,12 @@ public class ConnectionMySql {
         }
     }
 
-    public static ConnectionMySql get() {
-        return INSTANCE;
+    public static Connection getConnection() {
+        return ConnectToMySql.INSTANCE.sqlConnection;
     }
 
-    public Connection getSqlConnection() {
-        return sqlConnection;
+    private static class ConnectToMySql {
+        private static final ConnectionMySql INSTANCE = new ConnectionMySql();
+
     }
 }

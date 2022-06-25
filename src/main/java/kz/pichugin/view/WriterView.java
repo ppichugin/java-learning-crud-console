@@ -30,7 +30,10 @@ public class WriterView implements View {
                     case 3 -> getWriterById();
                     case 4 -> deleteWriterById();
                     case 5 -> getAllWriters();
-                    case 6 -> isAppRunning = false;
+                    case 6 -> {
+
+                        isAppRunning = false;
+                    }
                     default -> System.out.println(CheckCommand.errCommand);
                 }
             } catch (InputMismatchException e) {
@@ -39,6 +42,7 @@ public class WriterView implements View {
                 throw new RuntimeException(e);
             }
         }
+
     }
 
     private void saveWriter() throws IOException {
