@@ -1,10 +1,12 @@
 package kz.pichugin.repository.jdbc;
 
+import kz.pichugin.model.Label;
 import kz.pichugin.model.Post;
 import kz.pichugin.model.PostStatus;
 import kz.pichugin.model.Writer;
 import kz.pichugin.repository.WriterRepository;
 import kz.pichugin.sql.JdbcOperator;
+import kz.pichugin.util.CheckCommand;
 import kz.pichugin.util.ToLocalDateTimeConverter;
 
 import java.sql.PreparedStatement;
@@ -12,22 +14,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class WriterRepositoryJdbcImpl extends AbstractJdbcRepository implements WriterRepository {
-//    private WriterRepositoryJdbcImpl instance;
-
-//    public WriterRepositoryJdbcImpl() {
-//        jdbcOperator = new JdbcOperator(() -> ConnectionMySql.get().getSqlConnection());
-//    }
-
-//    public static WriterRepositoryJdbcImpl getInstance() {
-//        if (instance == null) {
-//            jdbcOperator = new JdbcOperator(() -> connection);
-//            instance = new WriterRepositoryJdbcImpl();
-//        }
-//        return instance;
-//    }
 
     @Override
     public Writer save(Writer writer) {
@@ -49,22 +40,15 @@ public class WriterRepositoryJdbcImpl extends AbstractJdbcRepository implements 
 
     @Override
     public Writer update(Writer writer) {
-        if (writer == null) {
-            return null;
-        }
-        if (writer.isNew()) {
-            System.out.println("Writer is new, can not be updated.");
-            return null;
-        } else {
-            JdbcOperator.execute("UPDATE writers SET first_name=?, last_name=? WHERE id=?", ps -> {
+        Integer updatedRows = JdbcOperator.transactionalExecute(conn -> {
+            try (PreparedStatement ps = conn.prepareStatement("UPDATE writers SET first_name=?, last_name=? WHERE id=?")) {
                 ps.setString(1, writer.getFirstName());
                 ps.setString(2, writer.getLastName());
                 ps.setLong(3, writer.getId());
-                ps.executeUpdate();
-                return null;
-            });
-            return writer;
-        }
+                return ps.executeUpdate();
+            }
+        });
+        return updatedRows > 0 ? writer : null;
     }
 
     @Override
@@ -72,6 +56,9 @@ public class WriterRepositoryJdbcImpl extends AbstractJdbcRepository implements 
         return JdbcOperator.execute("SELECT * FROM writers WHERE id=?", ps -> {
             ps.setLong(1, id);
             ResultSet rs = ps.executeQuery();
+            if (!rs.next()) {
+                return null;
+            }
             return getWriter(id, rs);
         });
     }
@@ -80,54 +67,87 @@ public class WriterRepositoryJdbcImpl extends AbstractJdbcRepository implements 
     public void deleteById(Long id) {
         JdbcOperator.execute("DELETE FROM writers WHERE id=?", ps -> {
             ps.setLong(1, id);
-            ps.executeUpdate();
+            if (ps.executeUpdate() > 0) {
+                System.out.println("Writer deleted");
+            } else {
+                System.out.println(CheckCommand.ERR_ID);
+            }
             return null;
         });
     }
 
     @Override
     public List<Writer> getAll() {
-
-        //TODO change SQL query to alternative to optimize performance
-
-        /*
-         * alternative SQL query
-         *
-         * SELECT * FROM writers
-         * LEFT JOIN posts p ON writers.id = p.writer_id
-         * LEFT JOIN labels l ON p.id = l.post_id;
-         */
         return JdbcOperator.transactionalExecute(conn -> {
-            List<Writer> writers = new ArrayList<>();
-            try (PreparedStatement ps = conn.prepareStatement("SELECT * FROM writers")) {
+            Map<Long, Writer> writersMap = new HashMap<>();
+            try (PreparedStatement ps = conn.prepareStatement("" +
+                    "SELECT * FROM writers " +
+                    "LEFT JOIN posts post ON writers.id = post.writer_id " +
+                    "LEFT JOIN labels lbl ON post.id = lbl.post_id " +
+                    "ORDER BY writers.id;")) {
                 ResultSet rs = ps.executeQuery();
                 while (rs.next()) {
+                    //WRITERS
                     long writerId = rs.getLong("id");
                     String first_name = rs.getString("first_name");
                     String last_name = rs.getString("last_name");
                     Writer writer = new Writer(writerId, first_name, last_name, null);
-                    List<Post> postList = new ArrayList<>();
-                    try (PreparedStatement psPosts = conn.prepareStatement("SELECT * FROM posts WHERE writer_id=?")) {
-                        psPosts.setLong(1, writerId);
-                        ResultSet rsPosts = psPosts.executeQuery();
-                        while (rsPosts.next()) {
-                            long postId = rsPosts.getLong("id");
-                            String content = rsPosts.getString("content");
-                            LocalDateTime created = ToLocalDateTimeConverter.convert(rsPosts.getTimestamp("created"));
-                            LocalDateTime updated = ToLocalDateTimeConverter.convert(rsPosts.getTimestamp("updated"));
-                            PostStatus postStatus = PostStatus.valueOf(rsPosts.getString("post_status"));
-                            postList.add(new Post(postId, content, created, updated, postStatus, null, writer));
-                        }
+                    writersMap.putIfAbsent(writerId, writer);
+
+                    //POSTS
+                    String postIdStr = rs.getString("post.id");
+                    if (postIdStr == null) {
+                        continue;
                     }
-                    writer.setPosts(postList);
-                    writers.add(writer);
+                    long postId = Long.parseLong(postIdStr);
+                    long postWriterId = rs.getLong("writer_id");
+                    Writer writerRelatedToPost = writersMap.get(postWriterId);
+                    List<Post> postsFromMap = writerRelatedToPost.getPosts();
+                    Post postFromMapPerWriter = null;
+                    if (postsFromMap != null) {
+                        postFromMapPerWriter = postsFromMap.stream().parallel()
+                                .filter(postFromMap -> postFromMap.getId() == postId)
+                                .findAny().orElse(null);
+                    }
+                    if (postFromMapPerWriter == null) {
+                        String content = rs.getString("content");
+                        LocalDateTime created = ToLocalDateTimeConverter.convert(rs.getTimestamp("created"));
+                        LocalDateTime updated = ToLocalDateTimeConverter.convert(rs.getTimestamp("updated"));
+                        String postSt = rs.getString("post_status");
+                        PostStatus postStatus = postSt != null ? PostStatus.valueOf(postSt) : null;
+                        Post post = new Post(postId, content, created, updated, postStatus, null, writerRelatedToPost);
+
+                        if (writerRelatedToPost.getPosts() == null) {
+                            writerRelatedToPost.setPosts(new ArrayList<>());
+                        }
+                        writerRelatedToPost.addPost(post);
+                    }
+
+                    //LABELS
+                    String labelIdStr = rs.getString("lbl.id");
+                    if (labelIdStr == null) {
+                        continue;
+                    }
+                    long labelId = Long.parseLong(labelIdStr);
+                    String labelName = rs.getString("name");
+                    long labelPostId = rs.getLong("post_id");
+                    Label label = new Label(labelId, labelName, labelPostId);
+                    writersMap.get(writerId).getPosts().stream().parallel()
+                            .filter((Post p) -> p.getId() == labelPostId)
+                            .findFirst()
+                            .ifPresent(post -> {
+                                if (post.getLabels() == null) {
+                                    post.setLabels(new ArrayList<>());
+                                }
+                                post.addLabel(label);
+                            });
                 }
             }
-            return writers;
+            return writersMap.values().stream().toList();
         });
     }
 
-    //todo re-check
+    //todo List<Post> posts
     private Writer getWriter(Long writerId, ResultSet rs) throws SQLException {
         String first_name = rs.getString("first_name");
         String last_name = rs.getString("last_name");

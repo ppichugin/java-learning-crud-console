@@ -51,7 +51,7 @@ public class LabelRepositoryJdbcImpl extends AbstractJdbcRepository implements L
     public Label getById(Long aLong) {
         final Label[] label = {null};
         JdbcOperator.transactionalExecute(conn -> {
-            try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM labels WHERE id = ?")) {
+            try (PreparedStatement ps = conn.prepareStatement("SELECT * FROM labels WHERE id = ?")) {
                 ps.setLong(1, aLong);
                 ResultSet rs = ps.executeQuery();
                 Long id = rs.getLong("id");

@@ -11,6 +11,10 @@ public class Label {
         this.postId = postId;
     }
 
+    public Label(String name, Long postId) {
+        this(null, name, postId);
+    }
+
     public Long getId() {
         return id;
     }
@@ -29,11 +33,6 @@ public class Label {
 
     @Override
     public String toString() {
-        final StringBuffer sb = new StringBuffer("Label{");
-        sb.append("id=").append(id);
-        sb.append(", name='").append(name).append('\'');
-        sb.append(", postId=").append(postId);
-        sb.append('}');
-        return sb.toString();
+        return "(id=" + id + ", '" + name + '\'' + ')';
     }
 }

@@ -24,13 +24,13 @@ public class WriterService implements StorageCrud<Writer, Long> {
     }
 
     @Override
-    public Writer getById(Long aLong) {
-        return repository.getById(aLong);
+    public Writer getById(Long id) {
+        return repository.getById(id);
     }
 
     @Override
-    public void deleteById(Long aLong) {
-        repository.deleteById(aLong);
+    public void deleteById(Long id) {
+        repository.deleteById(id);
     }
 
     @Override

@@ -4,6 +4,7 @@ import kz.pichugin.model.StorageCrud;
 import kz.pichugin.model.Writer;
 import kz.pichugin.repository.jdbc.WriterRepositoryJdbcImpl;
 import kz.pichugin.service.WriterService;
+import kz.pichugin.util.CheckCommand;
 
 import java.util.List;
 
@@ -15,23 +16,42 @@ public class WriterController implements StorageCrud<Writer, Long> {
     }
 
     @Override
-    public Writer save(Writer type) {
-        return writerService.save(type);
+    public Writer save(Writer writer) {
+        return writerService.save(writer);
     }
 
     @Override
-    public Writer update(Writer type) {
-        return writerService.update(type);
+    public Writer update(Writer writer) {
+        if (writer == null) {
+            return null;
+        }
+        if (writer.isNew()) {
+            System.out.println("Writer is new, can not be updated.");
+            return null;
+        }
+        Writer writerUpdated = writerService.update(writer);
+        if (writerUpdated != null) {
+            System.out.println("Writer updated.");
+            System.out.println(writerUpdated);
+        } else {
+            System.out.println(CheckCommand.ERR_ID);
+            System.out.println("Writer not updated");
+        }
+        return writerUpdated;
     }
 
     @Override
-    public Writer getById(Long aLong) {
-        return writerService.getById(aLong);
+    public Writer getById(Long id) {
+        Writer writer = writerService.getById(id);
+        if (writer == null) {
+            System.out.println("Writer not found");
+        }
+        return writer;
     }
 
     @Override
-    public void deleteById(Long aLong) {
-        writerService.deleteById(aLong);
+    public void deleteById(Long id) {
+        writerService.deleteById(id);
     }
 
     @Override

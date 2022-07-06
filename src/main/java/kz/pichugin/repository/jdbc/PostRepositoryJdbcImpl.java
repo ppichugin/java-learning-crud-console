@@ -6,6 +6,7 @@ import kz.pichugin.repository.PostRepository;
 import java.util.List;
 
 public class PostRepositoryJdbcImpl extends AbstractJdbcRepository implements PostRepository {
+
     @Override
     public Post save(Post type) {
         return null;

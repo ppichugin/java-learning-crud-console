@@ -2,11 +2,12 @@ package kz.pichugin.model;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class Writer {
     private final Long id;
-    private final String firstName;
-    private final String lastName;
+    private String firstName;
+    private String lastName;
     private List<Post> posts;
 
     public Writer(String firstName, String lastName) {
@@ -30,8 +31,16 @@ public class Writer {
         return firstName;
     }
 
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
     public String getLastName() {
         return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     public List<Post> getPosts() {
@@ -42,18 +51,35 @@ public class Writer {
         this.posts = posts;
     }
 
+    public void addPost(Post post) {
+        posts.add(post);
+    }
+
+
     public boolean isNew() {
         return getId() == null;
     }
 
     @Override
     public String toString() {
-        final StringBuffer sb = new StringBuffer("Writer{");
-        sb.append("id=").append(id);
-        sb.append(", firstName='").append(firstName).append('\'');
-        sb.append(", lastName='").append(lastName).append('\'');
-        sb.append(", posts=").append(posts);
-        sb.append('}');
-        return sb.toString();
+        String postList = (posts != null) ? posts.stream().map(Post::toString).collect(Collectors.joining("\n")) : null;
+        return "Writer {" +
+                "id=" + id +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", posts=" + ((postList == null) ? "NO" : "\n" + postList) +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Writer writer)) return false;
+        return id.equals(writer.id) && firstName.equals(writer.firstName) && lastName.equals(writer.lastName) && Objects.equals(posts, writer.posts);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, firstName, lastName, posts);
     }
 }

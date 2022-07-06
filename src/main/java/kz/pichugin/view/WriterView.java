@@ -21,50 +21,46 @@ public class WriterView implements View {
     public void run() {
         while (isAppRunning) {
             try {
+                int commandNumber = 0;
                 menu();
-                int commandNumber = scanner.nextInt();
-                if (!CheckCommand.isRangeCorrectInclusive(commandNumber, 1, 6)) continue;
+                commandNumber = scanner.nextInt();
                 switch (commandNumber) {
                     case 1 -> saveWriter();
                     case 2 -> updateWriter();
                     case 3 -> getWriterById();
                     case 4 -> deleteWriterById();
                     case 5 -> getAllWriters();
-                    case 6 -> {
-
-                        isAppRunning = false;
-                    }
-                    default -> System.out.println(CheckCommand.errCommand);
+                    case 6 -> isAppRunning = false;
+                    default -> System.out.println(CheckCommand.ERR_COMMAND);
                 }
             } catch (InputMismatchException e) {
-                System.out.println(CheckCommand.errInputNumber);
+                System.out.println(CheckCommand.ERR_INPUT);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }
-
     }
 
     private void saveWriter() throws IOException {
         while (true) {
             System.out.print("Enter: 'First name' and 'Last name' -- split with whitespace: ");
-            Writer writer = getWriterNames(null);
-            if (writer == null) continue;
+            Writer writer = getWriterNames();
+            if (writer == null) {
+                continue;
+            }
             writerController.save(writer);
             System.out.println("Writer saved!");
             return;
         }
     }
 
-    private Writer getWriterNames(Writer oldWriter) throws IOException {
+    private Writer getWriterNames() throws IOException {
         String[] params = reader.readLine().trim().split(" ");
-        if (params.length < 1 || params.length > 2) {
-            System.out.println("Incorrect. Should be First & Last names.");
+        if (params.length < 1 || params.length > 2 || params[0].isEmpty()) {
+            System.out.println(CheckCommand.ERR_INPUT);
             return null;
         }
-        String firstName = params[0].isEmpty() ? oldWriter.getFirstName() : params[0];
-        String lastName = params[1].isEmpty() ? oldWriter.getLastName() : params[1];
-        return new Writer(firstName, lastName);
+        return new Writer(params[0], params[1]);
     }
 
     private void updateWriter() throws IOException {
@@ -73,7 +69,7 @@ public class WriterView implements View {
             System.out.print("Enter writer ID: ");
             long writerId = scanner.nextLong();
             if (writerId < 0) {
-                System.out.println(CheckCommand.errIdFormat);
+                System.out.println(CheckCommand.ERR_ID);
                 continue;
             }
             writer = writerController.getById(writerId);
@@ -83,18 +79,38 @@ public class WriterView implements View {
         }
         while (true) {
             System.out.print("Enter NEW: 'First name' and 'Last name' -- split with whitespace: ");
-            Writer updateWriter = getWriterNames(writer);
-            if (updateWriter == null) continue;
-            writerController.update(updateWriter);
-            System.out.println("Writer updated!");
+            Writer newWriter = getWriterNames();
+            if (newWriter == null) continue;
+            writer.setFirstName(newWriter.getFirstName());
+            writer.setLastName(newWriter.getLastName());
+            writerController.update(writer);
             return;
         }
     }
 
     private void getWriterById() {
+        long writerId = getWriterId();
+        Writer writer = writerController.getById(writerId);
+        System.out.print("Writer details: " + writer);
+    }
+
+    private long getWriterId() {
+        long writerId;
+        while (true) {
+            System.out.print("Enter writer ID: ");
+            writerId = scanner.nextLong();
+            if (writerId < 0) {
+                System.out.println(CheckCommand.ERR_ID);
+                continue;
+            }
+            break;
+        }
+        return writerId;
     }
 
     private void deleteWriterById() {
+        long writerId = getWriterId();
+        writerController.deleteById(writerId);
     }
 
     private void getAllWriters() {
@@ -104,6 +120,7 @@ public class WriterView implements View {
 
     private void menu() {
         System.out.println("\n");
+        System.out.println(CheckCommand.MENU_SPLITTER);
         System.out.println("Menu for Writers:");
         System.out.println("1. Save new writer");
         System.out.println("2. Update writer");
@@ -111,7 +128,7 @@ public class WriterView implements View {
         System.out.println("4. Delete writer by ID");
         System.out.println("5. Get all writers");
         System.out.println("6. Return");
-        System.out.println("--------------------");
+        System.out.println(CheckCommand.MENU_SPLITTER);
         System.out.print("Enter command (1-6): ");
     }
 }

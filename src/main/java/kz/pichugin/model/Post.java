@@ -3,6 +3,8 @@ package kz.pichugin.model;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static kz.pichugin.util.ToLocalDateTimeConverter.DATE_TIME_FORMATTER;
+
 public class Post {
     private Long id;
     private final String content;
@@ -62,6 +64,10 @@ public class Post {
         this.labels = labels;
     }
 
+    public void addLabel(Label label) {
+        labels.add(label);
+    }
+
     public PostStatus getPostStatus() {
         return postStatus;
     }
@@ -84,15 +90,15 @@ public class Post {
 
     @Override
     public String toString() {
-        final StringBuffer sb = new StringBuffer("Post{");
-        sb.append("id=").append(id);
-        sb.append(", content='").append(content).append('\'');
-        sb.append(", created=").append(created);
-        sb.append(", updated=").append(updated);
-        sb.append(", labels=").append(labels);
-        sb.append(", postStatus=").append(postStatus);
-        sb.append(", writer=").append(writer);
-        sb.append('}');
-        return sb.toString();
+        String updatedDateTime = updated == null ? "" : ", updated=" + DATE_TIME_FORMATTER.format(updated);
+        String labelsValue = labels == null ? "" : ", labels=" + labels;
+        String sb = "\tPost{" + "id=" + id +
+                ", content='" + content + '\'' +
+                ", created=" + DATE_TIME_FORMATTER.format(created) +
+                updatedDateTime +
+                labelsValue +
+                ", postStatus=" + postStatus +
+                '}';
+        return sb;
     }
 }
