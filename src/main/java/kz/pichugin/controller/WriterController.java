@@ -44,7 +44,9 @@ public class WriterController implements StorageCrud<Writer, Long> {
     public Writer getById(Long id) {
         Writer writer = writerService.getById(id);
         if (writer == null) {
-            System.out.println("Writer not found");
+            System.out.println(CheckCommand.MENU_SPLITTER);
+            System.out.println("!!! Writer not found !!! ");
+            System.out.println(CheckCommand.MENU_SPLITTER);
         }
         return writer;
     }

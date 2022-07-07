@@ -14,6 +14,16 @@ public class Post {
     private PostStatus postStatus;
     private Writer writer;
 
+    public Post(String content, Writer writer) {
+        this.content = content;
+        this.writer = writer;
+    }
+
+    public Post(Long id, String content) {
+        this.id = id;
+        this.content = content;
+    }
+
     public Post(String content, LocalDateTime created, LocalDateTime updated, PostStatus postStatus, List<Label> labels, Writer writer) {
         this(null, content, created, updated, postStatus, labels, writer);
     }
@@ -97,6 +107,7 @@ public class Post {
                 ", created=" + DATE_TIME_FORMATTER.format(created) +
                 updatedDateTime +
                 labelsValue +
+                ", writerId=" + writer.getId() +
                 ", postStatus=" + postStatus +
                 '}';
         return sb;

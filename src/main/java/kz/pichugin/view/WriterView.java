@@ -21,7 +21,7 @@ public class WriterView implements View {
     public void run() {
         while (isAppRunning) {
             try {
-                int commandNumber = 0;
+                int commandNumber;
                 menu();
                 commandNumber = scanner.nextInt();
                 switch (commandNumber) {

@@ -5,14 +5,18 @@ public class Label {
     private final String name;
     private Long postId;
 
-    public Label(Long id, String name, Long postId) {
-        this.id = id;
-        this.name = name;
-        this.postId = postId;
+    public Label(Long id, String name) {
+        this(id, name, null);
     }
 
     public Label(String name, Long postId) {
         this(null, name, postId);
+    }
+
+    public Label(Long id, String name, Long postId) {
+        this.id = id;
+        this.name = name;
+        this.postId = postId;
     }
 
     public Long getId() {

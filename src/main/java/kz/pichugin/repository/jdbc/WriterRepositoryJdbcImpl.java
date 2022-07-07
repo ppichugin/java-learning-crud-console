@@ -40,7 +40,7 @@ public class WriterRepositoryJdbcImpl extends AbstractJdbcRepository implements 
 
     @Override
     public Writer update(Writer writer) {
-        Integer updatedRows = JdbcOperator.transactionalExecute(conn -> {
+        int updatedRows = JdbcOperator.transactionalExecute(conn -> {
             try (PreparedStatement ps = conn.prepareStatement("UPDATE writers SET first_name=?, last_name=? WHERE id=?")) {
                 ps.setString(1, writer.getFirstName());
                 ps.setString(2, writer.getLastName());

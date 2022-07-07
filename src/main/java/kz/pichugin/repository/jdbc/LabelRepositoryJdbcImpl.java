@@ -6,22 +6,12 @@ import kz.pichugin.sql.JdbcOperator;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 public class LabelRepositoryJdbcImpl extends AbstractJdbcRepository implements LabelRepository {
-//    private static LabelRepositoryJdbcImpl instance;
-//
-//    private LabelRepositoryJdbcImpl() {
-//        jdbcOperator = new JdbcOperator(() -> connection);
-//    }
-//
-//    public static LabelRepositoryJdbcImpl getInstance() {
-//        if (instance == null) {
-//            instance = new LabelRepositoryJdbcImpl();
-//        }
-//        return instance;
-//    }
 
     @Override
     public Label save(Label label) {
@@ -31,6 +21,14 @@ public class LabelRepositoryJdbcImpl extends AbstractJdbcRepository implements L
                 ps.setLong(2, label.getPostId());
                 ps.executeUpdate();
             }
+            JdbcOperator.transactionalExecute(conn2 -> {
+                try (PreparedStatement ps = conn2.prepareStatement("UPDATE posts SET updated = ? WHERE posts.id = ?")) {
+                    ps.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
+                    ps.setLong(2, label.getPostId());
+                    ps.executeUpdate();
+                }
+                return null;
+            });
             return null;
         });
         return label;
@@ -38,13 +36,14 @@ public class LabelRepositoryJdbcImpl extends AbstractJdbcRepository implements L
 
     @Override
     public Label update(Label label) {
-        JdbcOperator.execute("UPDATE labels SET name = ? WHERE id = ?", ps -> {
-            ps.setString(1, label.getName());
-            ps.setLong(2, label.getId());
-            ps.executeUpdate();
-            return null;
+        int updatedLabels = JdbcOperator.transactionalExecute(conn -> {
+            try (PreparedStatement ps = conn.prepareStatement("UPDATE labels SET name = ? WHERE id = ?")) {
+                ps.setString(1, label.getName());
+                ps.setLong(2, label.getId());
+                return ps.executeUpdate();
+            }
         });
-        return label;
+        return updatedLabels > 0 ? label : null;
     }
 
     @Override
@@ -54,6 +53,7 @@ public class LabelRepositoryJdbcImpl extends AbstractJdbcRepository implements L
             try (PreparedStatement ps = conn.prepareStatement("SELECT * FROM labels WHERE id = ?")) {
                 ps.setLong(1, aLong);
                 ResultSet rs = ps.executeQuery();
+                rs.next();
                 Long id = rs.getLong("id");
                 String name = rs.getString("name");
                 Long postId = rs.getLong("post_id");
@@ -68,7 +68,11 @@ public class LabelRepositoryJdbcImpl extends AbstractJdbcRepository implements L
     public void deleteById(Long aLong) {
         JdbcOperator.execute("DELETE FROM labels WHERE id = ?", ps -> {
             ps.setLong(1, aLong);
-            ps.executeQuery();
+            if (ps.executeUpdate() > 0) {
+                System.out.println("Success delete!");
+            } else {
+                System.out.println("Label with id  delete!");
+            }
             return null;
         });
     }

@@ -35,6 +35,7 @@ public class JdbcOperator {
                 return res;
             } catch (SQLException e) {
                 conn.rollback();
+                e.printStackTrace();
                 throw new RuntimeException();
             }
         } catch (SQLException e) {
