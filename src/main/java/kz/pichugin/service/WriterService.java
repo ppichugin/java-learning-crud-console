@@ -7,7 +7,7 @@ import kz.pichugin.repository.WriterRepository;
 import java.util.List;
 
 public class WriterService implements StorageCrud<Writer, Long> {
-    private final WriterRepository repository;
+    WriterRepository repository;
 
     public WriterService(WriterRepository repository) {
         this.repository = repository;

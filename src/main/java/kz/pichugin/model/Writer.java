@@ -10,6 +10,10 @@ public class Writer {
     private String lastName;
     private List<Post> posts;
 
+    public Writer(Long id, String firstName, String lastName) {
+        this(id, firstName, lastName, null);
+    }
+
     public Writer(String firstName, String lastName) {
         this(null, firstName, lastName, null);
     }
@@ -74,8 +78,9 @@ public class Writer {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Writer writer)) return false;
-        return id.equals(writer.id) && firstName.equals(writer.firstName) && lastName.equals(writer.lastName) && Objects.equals(posts, writer.posts);
+        if (!(o instanceof Writer)) return false;
+        Writer writer = (Writer) o;
+        return Objects.equals(id, writer.id) && firstName.equals(writer.firstName) && lastName.equals(writer.lastName) && Objects.equals(posts, writer.posts);
     }
 
     @Override
